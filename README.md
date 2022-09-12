@@ -5,7 +5,7 @@ This is collection of SDK for accessing IDCH Cloud with .NET Platform by Gravico
 
 Refer to the ```TestStorage``` project for exercising the library.
 
-## Getting Started - AWS S3 Compatible Storage (Minio, Less3, etc)
+## Getting Started - IDCH Object Storage
 ```csharp
 using IDCH.Storage;
 
@@ -69,7 +69,6 @@ EnumerationResult result = await _Blobs.Enumerate();
 
 If you have multiple storage repositories and wish to move BLOBs from one repository to another, use the ```BlobCopy``` class (refer to the ```Test.Copy``` project for a full working example).
 
-Thanks to @phpfui for contributing code and the idea for this enhancement!
 
 ```csharp
 Blobs from    = new Blobs(new DiskSettings("./disk1/")); // assume some files are here
