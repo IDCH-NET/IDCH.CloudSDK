@@ -45,6 +45,7 @@ else
                 {
                     <MudButton ButtonType="ButtonType.Button" @onclick="(() => PrepareForEdit(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Ubah</MudButton>
                     <MudButton ButtonType="ButtonType.Button" @onclick="(() => PrepareForDelete(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Error" Class="mr-2">Hapus</MudButton>
+                    <MudButton ButtonType="ButtonType.Button" @onclick="(() => Download(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Success" Class="mr-2">Download</MudButton>
                 }
             </MudTd>
         </RowTemplate>
@@ -92,7 +93,20 @@ else
     private bool bordered = false;
     private string searchString1 = "";
     private StorageObject selectedItem1 = null;
+    async Task Download(StorageObject item)
+    {
+        try
+        {
+            var data = await service.DownloadByKey(item.Name);
+            var bytes = data.Data;
+            await FileUtil.SaveAs(jsRuntime, $"{data.Name}", bytes);
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowError(ex.Message);
+        }
 
+    }
     private HashSet<StorageObject> selectedItems = new HashSet<StorageObject>();
 
     private bool FilterFunc1(StorageObject element) => FilterFunc(element, searchString1);

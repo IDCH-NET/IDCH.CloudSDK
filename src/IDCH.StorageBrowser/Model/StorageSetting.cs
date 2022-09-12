@@ -24,7 +24,7 @@
         }
         public void GenerateBaseUrl()
         {
-            this.BaseUrl = $"{EndpointUrl}/{Bucket}/Key1";
+            this.BaseUrl = EndpointUrl + "/{bucket}/{key}";
         }
     }
 }
