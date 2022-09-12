@@ -1,0 +1,142 @@
+﻿@inject IJSRuntime jsRuntime
+@using System.IO
+@inject IToastService toastService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-3 mb-n1" />
+            @CustomHeader
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <EditForm Model="@TaskObject" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" sm="12">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudTextField Label="Nama" HelperText="Nama StorageObject"
+                                          @bind-Value="TaskObject.Name" For="@(() => TaskObject.Name)" />
+                            <MudButton HtmlTag="label" Class="mr-2" 
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Filled.CloudUpload"
+                                       for="fileInput1">
+                                Upload File
+                            </MudButton>
+                            <InputFile id="fileInput1" Size="Size.Small" OnChange="UploadFiles" hidden />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Simpan</MudButton>
+                            <MudButton ButtonType="ButtonType.Button" OnClick="Cancel" Variant="Variant.Filled" Color="Color.Secondary">Cancel</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+
+            </MudGrid>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    public LocalMemoryStorageService MemorySvc
+    {
+        get
+        {
+            return AppConstants.DataSession;
+        }
+    }
+    byte[] FileData = null;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var ms = new MemoryStream();
+            await file.OpenReadStream().CopyToAsync(ms);
+            string Ext = Path.GetExtension(file.Name);
+
+            if (string.IsNullOrEmpty(TaskObject.Name ))
+            {
+                TaskObject.Name = file.Name;
+            }
+            TaskObject.ContentType = file.ContentType;
+            FileData =  ms.ToArray();
+
+        }
+    }
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    [Parameter]
+    public string CustomHeader { get; set; }
+    [Parameter]
+    public StorageObject TaskObject { get; set; }
+    [Parameter]
+    public Action DataChanged { get; set; }
+    StorageSetting Setting { set; get; }
+    StorageObjectService service{ set; get; }
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            
+            Setting = MemorySvc.GetItem<StorageSetting>(UserName);
+            if (Setting == null)
+            {
+                var item = await localStorage.GetItemAsync<StorageSetting>(UserName);
+                if (item == null)
+                {
+                    MudDialog.Close(DialogResult.Ok(TaskObject.Name));
+                    return;
+                }
+                else
+                {
+                    Setting = item;
+                }
+            }
+            if (service == null) service = new StorageObjectService(Setting);
+        }
+    }
+    private async Task OnValidSubmit(EditContext context)
+    {
+        if (FileData == null)
+        {
+            Snackbar.Add("Select file first.", Severity.Error);
+            return;
+        }
+        if (string.IsNullOrEmpty( TaskObject.Name) )
+        {
+            Snackbar.Add("Give it name/key first.", Severity.Error);
+            return;
+        }
+        var hasil = await service.InsertData(TaskObject.Name, TaskObject.ContentType, FileData);
+        if (!hasil)
+        {
+            Snackbar.Add("Fail to upload data. Fill the data correctly.", Severity.Error);
+            //toastService.ShowError("Gagal menyimpan data. Isi data dengan lengkap.", "Perhatian");
+        }
+
+        //In a real world scenario this bool would probably be a service to delete the item from api/database
+        Snackbar.Add("Data Uploaded", Severity.Success);
+        MudDialog.Close(DialogResult.Ok(TaskObject.Name));
+        DataChanged?.Invoke();
+    }
+
+}

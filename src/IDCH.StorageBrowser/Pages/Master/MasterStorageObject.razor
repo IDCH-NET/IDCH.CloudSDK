@@ -1,0 +1,238 @@
+﻿@page "/master/StorageObject"
+
+@inject IJSRuntime jsRuntime
+@inject NavigationManager NavMgr
+@inject IToastService toastService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IDialogService DialogService
+@using System.IO
+
+<h1>Daftar Storage Object</h1>
+
+<p>Gunakan halaman ini untuk melihat info StorageObject.</p>
+
+@if (DataStorageObject == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <MudTable Context="item" Items="@DataStorageObject" Dense="@dense" Hover="@hover" Bordered="@bordered" Striped="@striped" Filter="new Func<StorageObject,bool>(FilterFunc1)" @bind-SelectedItem="selectedItem1">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Data Storage Object</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="searchString1" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Key</MudTh>
+            <MudTh>Content Type</MudTh>
+            <MudTh>Last Access</MudTh>
+            <MudTh>Last Update</MudTh>
+            <MudTh>Size</MudTh>
+            <MudTh>Url</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+
+            <MudTd DataLabel="Key">@item.Name</MudTd>
+            <MudTd DataLabel="Content Type">@item.ContentType</MudTd>
+            <MudTd DataLabel="Last Access">@item.LastAccess?.ToString("dd/MMM/yyyy HH:mm")</MudTd>
+            <MudTd DataLabel="Last Update">@item.LastUpdate?.ToString("dd/MMM/yyyy HH:mm")</MudTd>           
+            <MudTd DataLabel="Size">@item.Size.ToString("n0")</MudTd>
+            <MudTd DataLabel="Url">@item.FileUrl</MudTd>
+            <MudTd DataLabel="Actions">
+                @if (HasLogin)
+                {
+                    <MudButton ButtonType="ButtonType.Button" @onclick="(() => PrepareForEdit(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Ubah</MudButton>
+                    <MudButton ButtonType="ButtonType.Button" @onclick="(() => PrepareForDelete(item))" DisableElevation="true" Variant="Variant.Filled" Color="Color.Error" Class="mr-2">Hapus</MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+
+    <div class="d-flex flex-wrap mt-4">
+        <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
+        <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
+        <MudSwitch @bind-Checked="@striped" Color="Color.Tertiary">Striped</MudSwitch>
+        <MudSwitch @bind-Checked="@bordered" Color="Color.Warning">Bordered</MudSwitch>
+    </div>
+
+
+}
+@if (HasLogin)
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudButton ButtonType="ButtonType.Button" @onclick="(() => InitializeitemObject())" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Masukan Storage Object Baru</MudButton>
+    </MudPaper>
+}
+
+@code {
+    bool HasLogin = false;
+    StorageObjectDetail detail;
+    StorageObjectService service;
+    string customHeader = string.Empty;
+    List<StorageObject> DataStorageObject;
+    StorageObject itemObject = new StorageObject();
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    string UserName;
+    public LocalMemoryStorageService MemorySvc
+    {
+        get
+        {
+            return AppConstants.DataSession;
+        }
+    }
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private StorageObject selectedItem1 = null;
+
+    private HashSet<StorageObject> selectedItems = new HashSet<StorageObject>();
+
+    private bool FilterFunc1(StorageObject element) => FilterFunc(element, searchString1);
+
+    private bool FilterFunc(StorageObject element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.ContentType.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.FileUrl.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    async Task DownloadFile(string Key)
+    {
+        if (!string.IsNullOrEmpty(Key))
+        {
+
+        }
+        else
+        {
+            toastService.ShowError("Url kosong atau tidak valid.");
+        }
+    }
+    StorageSetting Setting{ set; get; }
+    protected override async Task OnInitializedAsync()
+    {
+
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UserName = user.Identity.Name;
+            HasLogin = true;// Userservice.GetUserRole(UserName) == Roles.Admin;
+            Setting = MemorySvc.GetItem<StorageSetting>(UserName);
+            if (Setting == null)
+            {
+                var item = await localStorage.GetItemAsync<StorageSetting>(UserName);
+                if (item == null)
+                {
+                    NavMgr.NavigateTo("/logout",true);
+                    return;
+                }
+                else
+                {
+                    Setting = item;
+                }
+            }
+            if (service == null) service = new StorageObjectService(Setting);
+        }
+        else
+        {
+            NavMgr.NavigateTo("/auth/login");
+        }
+
+
+
+        DataStorageObject = await service.GetAllData();
+
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (UserName != null && Setting!=null)
+            {
+                var item = await localStorage.GetItemAsync<StorageSetting>(UserName);
+                if (item == null)
+                {
+                    await localStorage.SetItemAsync(UserName,Setting);
+                }
+            }
+        }
+    }
+
+    private async Task InitializeitemObject()
+    {
+
+        itemObject = new StorageObject();
+
+        customHeader = "Masukan Storage Object Baru";
+
+        var action = new Action(DataChanged);
+        var parameters = new DialogParameters { ["TaskObject"] = itemObject, ["CustomHeader"] = customHeader, ["DataChanged"] = action };
+
+        var dialog = DialogService.Show<StorageObjectDetail>(customHeader, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            long.TryParse(result.Data.ToString(), out var NewId);
+        }
+    }
+    private async void DataChanged()
+    {
+        DataStorageObject = await service.GetAllData();
+        StateHasChanged();
+    }
+
+    private async Task PrepareForEdit(StorageObject item)
+    {
+        customHeader = "Ubah Data Storage Object";
+        itemObject = item;
+        var action = new Action(DataChanged);
+        var parameters = new DialogParameters { ["TaskObject"] = itemObject, ["CustomHeader"] = customHeader, ["DataChanged"] = action };
+
+        var dialog = DialogService.Show<StorageObjectDetail>(customHeader, parameters);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            //In a real world scenario we would reload the data from the source here since we "removed" it in the dialog already.
+            long.TryParse(result.Data.ToString(), out var NewId);
+        }
+
+    }
+    private async Task PrepareForDelete(StorageObject item)
+    {
+        itemObject = item;
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = DialogService.Show<ConfirmDialog>("Konfirmasi", options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var task = await service.DeleteData(itemObject.Name);
+            //await jsRuntime.InvokeAsync<object>("CloseModal", "confirmDeleteModal");
+            DataStorageObject = await service.GetAllData();
+            itemObject = new StorageObject() {  };
+        }
+    }
+
+
+}
+

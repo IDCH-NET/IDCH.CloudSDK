@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.32804.182
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IDCH.Storage", "IDCH.Storage\IDCH.Storage.csproj", "{BE5F3D6E-D899-4D59-ADC2-166A88509B77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK", "SDK", "{E61116A1-F379-44C4-9AE2-114FFC5425CA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{E2951D4C-0D43-4BFB-B715-04B81C26A0DA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestStorage", "TestStorage\TestStorage.csproj", "{88BE27B0-9DA3-40C9-92AA-6E068D42CB3A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App", "App", "{97D06EC7-105E-41CD-B281-1523F5E53291}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IDCH.StorageBrowser", "IDCH.StorageBrowser\IDCH.StorageBrowser.csproj", "{CCABB564-F473-463E-8230-3D53495D7A6F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BE5F3D6E-D899-4D59-ADC2-166A88509B77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE5F3D6E-D899-4D59-ADC2-166A88509B77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE5F3D6E-D899-4D59-ADC2-166A88509B77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE5F3D6E-D899-4D59-ADC2-166A88509B77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88BE27B0-9DA3-40C9-92AA-6E068D42CB3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88BE27B0-9DA3-40C9-92AA-6E068D42CB3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88BE27B0-9DA3-40C9-92AA-6E068D42CB3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88BE27B0-9DA3-40C9-92AA-6E068D42CB3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCABB564-F473-463E-8230-3D53495D7A6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCABB564-F473-463E-8230-3D53495D7A6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCABB564-F473-463E-8230-3D53495D7A6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCABB564-F473-463E-8230-3D53495D7A6F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BE5F3D6E-D899-4D59-ADC2-166A88509B77} = {E61116A1-F379-44C4-9AE2-114FFC5425CA}
+		{88BE27B0-9DA3-40C9-92AA-6E068D42CB3A} = {E2951D4C-0D43-4BFB-B715-04B81C26A0DA}
+		{CCABB564-F473-463E-8230-3D53495D7A6F} = {97D06EC7-105E-41CD-B281-1523F5E53291}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C7C9FF05-2DF6-41A8-A7DF-9FD6550A287A}
+	EndGlobalSection
+EndGlobal

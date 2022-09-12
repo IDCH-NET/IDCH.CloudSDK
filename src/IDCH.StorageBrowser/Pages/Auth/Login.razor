@@ -1,0 +1,117 @@
+﻿@layout NoAuthLayout
+@page "/auth/login"
+@page "/loginControl"
+@using System.Web;
+
+@using Microsoft.AspNetCore.WebUtilities
+@inject IJSRuntime jsRuntime
+@inject IToastService toastService
+@inject NavigationManager NavMgr
+@inject ISnackbar Snackbar
+
+<AuthorizeView>
+    <Authorized>
+        <b>Hello, @context.User.Identity.Name!</b>
+        <a class="ml-md-auto btn btn-primary"
+           href="/logout?returnUrl=/"
+           target="_top">Logout</a>
+    </Authorized>
+    <NotAuthorized>
+
+        <MudGrid>
+            <MudItem xs="12">
+                <MudText Align="Align.Center" Typo="Typo.h6">Login</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudCard>
+                    <MudCardContent>
+                        <MudTextField Label="Endpoint Url" HelperText="Endpoint Url"
+                                      @bind-Value="StorageObj.EndpointUrl" ReadOnly For="@(() => StorageObj.EndpointUrl)" />
+                        <MudTextField Label="Access Key" HelperText="Access Key"
+                                      @bind-Value="StorageObj.AccessKey" For="@(() => StorageObj.AccessKey)" />
+                        <MudTextField Label="Secret Key" HelperText="Secret Key"
+                                      @bind-Value="StorageObj.SecretKey" For="@(() => StorageObj.SecretKey)" />
+                        <MudTextField Label="Name / Bucket" HelperText="Name / Bucket"
+                                      @bind-Value="StorageObj.Bucket" For="@(() => StorageObj.Bucket)" />
+                        
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton ButtonType="ButtonType.Button" @onclick="LoginNow" DisableElevation="true" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2">Login</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+
+                    @if (showError)
+                    {
+
+                        <MudText Color="@Color.Error">
+                            Silakan bikin storage dulu di IDCH, data yang Anda isi tidak terdaftar
+                        </MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    public StorageSetting StorageObj { get; set; } = new();
+    bool showError = false;
+    async Task KeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoginNow();
+            //Console.WriteLine(this.Value);
+        }
+    }
+    private string encode(string param)
+    {
+        return HttpUtility.UrlEncode(param);
+    }
+    async Task LoginNow()
+    {
+        var ErrMsg = "";
+        if (string.IsNullOrEmpty(StorageObj.AccessKey))
+        {
+            ErrMsg += "Tolong isi AccessKey.";
+        }
+        if (string.IsNullOrEmpty(StorageObj.SecretKey))
+        {
+            ErrMsg += "Tolong isi SecretKey.";
+        } 
+        if (string.IsNullOrEmpty(StorageObj.Bucket))
+        {
+            ErrMsg += "Tolong isi Bucket.";
+        }
+        if (ErrMsg.Length > 0)
+        {
+            Snackbar.Add(ErrMsg, Severity.Error);
+            //toastService.ShowError(ErrMsg, "Perhatian");
+        }
+        else
+        {
+            string logUrl = $"/login?access={encode(StorageObj.AccessKey)}&secret={encode(StorageObj.SecretKey)}&bucket={encode(StorageObj.Bucket)}";
+            await jsRuntime.InvokeAsync<object>("OpenUrl", logUrl);
+        }
+        //NavMgr.NavigateTo(logUrl);
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavMgr.ToAbsoluteUri(NavMgr.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("result", out var resultString))
+        {
+            var result = bool.Parse(resultString);
+            if (!result)
+            {
+                showError = true;
+                Snackbar.Add("Silakan bikin storage dulu di IDCH, data yang Anda isi tidak terdaftar", Severity.Error);
+                //toastService.ShowWarning("username/password salah atau tidak terdaftar", "Perhatian");
+            }
+        }
+    }
+}
