@@ -74,7 +74,7 @@ builder.Services.AddBlazoredToast();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.KnownProxies.Add(IPAddress.Parse("103.189.234.206"));
+    options.KnownProxies.Add(IPAddress.Parse("103.189.234.61"));
 });
 
 builder.Services.AddSignalR(hubOptions =>
